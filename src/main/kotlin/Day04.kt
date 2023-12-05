@@ -1,11 +1,12 @@
 fun main() {
     fun part1(input: List<String>): Int {
-        val cards = input.map { Card.from(it) }.toList()
+        val cards = Cards.from(input)
         return cards.sumOf { it.score() }
     }
 
     fun part2(input: List<String>): Int {
-        return input.size
+        val cards = Cards.from(input)
+        return Cards.calculateTotalCards(cards)
     }
 
     // test if implementation meets criteria from the description, like:
@@ -23,13 +24,18 @@ data class Card(
 ) {
     fun score(): Int {
         var score = 0
-        repeat(winningNumbers.intersect(myNumbers).size) {
+        repeat(numMatches()) {
             score = score.times(2).coerceAtLeast(1)
         }
         return score
     }
 
+    fun numMatches(): Int {
+        return winningNumbers.intersect(myNumbers).size
+    }
+
     companion object {
+
         fun from(input: String): Card {
             val split = input.split("|")
             val winningNumbers = parseNumbers(split.first().substringAfter(":"))
@@ -45,4 +51,25 @@ data class Card(
         }
     }
 
+}
+
+class Cards {
+    companion object {
+
+        fun from(input: List<String>): List<Card> {
+            return input.map { Card.from(it) }.toList()
+        }
+
+        fun calculateTotalCards(cards: List<Card>): Int {
+            val cardCounts = List(cards.size) { 1 }.toMutableList()
+
+            for ((index, card) in cards.withIndex()) {
+                repeat(card.numMatches()) {
+                    cardCounts[index + it + 1] += cardCounts[index]
+                }
+            }
+
+            return cardCounts.sum()
+        }
+    }
 }
