@@ -79,4 +79,35 @@ class Day03Tests {
         ))
     }
 
+    @Test
+    fun `Find all gears`() {
+        val schematic = """
+            ..12*
+            @34..
+            ..*56
+        """.trimIndent().lines()
+
+        val engine = Engine.from(schematic)
+
+        assertThat(engine.gears()).isEqualTo(setOf(
+            EngineGear(listOf(
+                EnginePart(34, setOf(Point(1, 1), Point(2, 1))),
+                EnginePart(56, setOf(Point(3, 2), Point(4, 2))),
+            ))
+        ))
+    }
+
+    @Test
+    fun `Calculate gear ratio`() {
+        val schematic = """
+            ..12*
+            @34..
+            ..*56
+        """.trimIndent().lines()
+
+        val engine = Engine.from(schematic)
+        val gear = engine.gears().first()
+        assertThat(gear.ratio()).isEqualTo(1904)
+    }
+
 }

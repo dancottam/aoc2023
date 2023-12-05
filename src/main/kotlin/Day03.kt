@@ -5,7 +5,8 @@ fun main() {
     }
 
     fun part2(input: List<String>): Int {
-        return input.size
+        val engine = Engine.from(input)
+        return engine.gears().sumOf { it.ratio() }
     }
 
     // test if implementation meets criteria from the description, like:
@@ -55,7 +56,19 @@ data class EnginePart(
 data class EngineSymbol(
     val char: Char,
     val point: Point,
-)
+) {
+    fun adjacentParts(parts: List<EnginePart>): List<EnginePart> {
+        return parts.filter { it.points.any{ it.isAdjacentTo(point)} }.toList()
+    }
+}
+
+data class EngineGear(
+    val adjacentParts: List<EnginePart>
+) {
+    fun ratio(): Int {
+        return adjacentParts.map(EnginePart::number).reduce(Int::times)
+    }
+}
 
 data class Point(
     val x: Int,
@@ -75,7 +88,11 @@ data class Point(
     }
 
     fun isAdjacentTo(pointsToCheck: Set<Point>): Boolean {
-        return neighbours().any { pointsToCheck.contains(it) }
+        return pointsToCheck.any { isAdjacentTo(it) }
+    }
+
+    fun isAdjacentTo(pointToCheck: Point): Boolean {
+        return neighbours().contains(pointToCheck)
     }
 
 }
@@ -85,7 +102,11 @@ data class Engine(
     val symbols: Set<EngineSymbol>,
 ) {
     fun partsAdjacentToSymbols(): List<EnginePart> {
-        return parts.filter { part -> part.isAdjacentTo(symbols.map { it.point }.toSet()) }
+        return parts.filter { it.isAdjacentTo(symbols.map(EngineSymbol::point).toSet()) }
+    }
+
+    fun gears(): Set<EngineGear> {
+        return symbols.filter { it.char == '*' }.map { EngineGear(it.adjacentParts(parts)) }.filter { it.adjacentParts.size > 1 }.toSet()
     }
 
     companion object {
