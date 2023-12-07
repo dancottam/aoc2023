@@ -4,8 +4,9 @@ fun main() {
         return almanac.lowestLocation()
     }
 
-    fun part2(input: List<String>): Int {
-        return input.size
+    fun part2(input: List<String>): Long {
+        val almanac = Almanac.from(input)
+        return almanac.lowestLocationForSeedRanges()
     }
 
     // test if implementation meets criteria from the description, like:
@@ -19,14 +20,13 @@ fun main() {
 
 data class Almanac(
     val seeds: List<Long>,
-    val lookupsBySrc: Map<String, Lookup>
+    val lookups: List<Lookup>,
+    val seedRanges: List<LongRange>
 ) {
     fun findLocationForSeed(seed: Long): Long {
-        val lookupOrder = listOf("seed", "soil", "fertilizer", "water", "light", "temperature", "humidity", "location")
-
         var result = seed
-        for (src in lookupOrder) {
-            result = lookupsBySrc[src]?.findDest(result) ?: result
+        for (lookup in lookups) {
+            result = lookup.findDest(result)
         }
 
         return result
@@ -36,9 +36,23 @@ data class Almanac(
         return seeds.map(::findLocationForSeed).min()
     }
 
+    fun lowestLocationForSeedRanges(): Long {
+        return generateSequence(0L) { it + 1 }.first {
+            var result = it
+            for(lookup in lookups.reversed()) {
+                result = lookup.findSrc(result)
+            }
+            seedRanges.any {
+                it.contains(result)
+            }
+        }
+    }
+
     companion object {
         fun from(input: List<String>): Almanac {
             val seeds = Seeds.from(input.first())
+
+            val seedRanges = Seeds.rangesFrom(input.first())
 
             val lookups = mutableListOf<Lookup>()
 
@@ -58,7 +72,8 @@ data class Almanac(
 
             return Almanac(
                 seeds = seeds,
-                lookupsBySrc = lookups.associateBy { it.srcCat }
+                seedRanges = seedRanges,
+                lookups = lookups,
             )
         }
     }
@@ -71,12 +86,21 @@ data class Lookup(
     val mapping: Map<LongRange, LongRange>
 ) {
     fun findDest(src: Long): Long {
-        for (srcRange in mapping.keys) {
+        for ((srcRange, destRange) in mapping) {
             if (srcRange.contains(src)) {
-                return (mapping[srcRange]?.first ?: continue) + (src - srcRange.first)
+                return destRange.first + (src - srcRange.first)
             }
         }
         return src
+    }
+
+    fun findSrc(dest: Long): Long {
+        for ((srcRange, destRange) in mapping) {
+            if (destRange.contains(dest)) {
+                return srcRange.first + (dest - destRange.first)
+            }
+        }
+        return dest
     }
 
     companion object {
@@ -109,8 +133,20 @@ data class Lookup(
 class Seeds {
     companion object {
         fun from(input: String): List<Long> {
-            return input.substringAfter("seeds: ").split("\\s+".toRegex()).map(String::toLong).toList()
+            return parseSeedNums(input).toList()
         }
+
+        fun rangesFrom(input: String): List<LongRange> {
+            val seedRanges = mutableListOf<LongRange>()
+
+            for (rangeDef in parseSeedNums(input).chunked(2)) {
+                seedRanges.add(LongRange(rangeDef.first(), rangeDef.first() + rangeDef.last() - 1))
+            }
+
+            return seedRanges.toList()
+        }
+
+        private fun parseSeedNums(input: String) = input.substringAfter("seeds: ").split("\\s+".toRegex()).map(String::toLong)
     }
 
 }
