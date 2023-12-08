@@ -54,7 +54,7 @@ class Day06Tests {
         "5,10",
         "6,6"
     )
-    fun `Calculate travel distance after button release`(pressDuration: Int, expectedDistance: Int) {
+    fun `Calculate travel distance after button release`(pressDuration: Long, expectedDistance: Long) {
 
         val race = Race(time = 7, recordDistance = 9)
 
@@ -65,6 +65,21 @@ class Day06Tests {
     fun `Find record-beating presses`() {
         val race = Race(time = 7, recordDistance = 9)
 
-        assertThat(race.findRecordBeatingPresses()).isEqualTo(listOf(2, 3, 4, 5))
+        assertThat(race.findRecordBeatingPresses()).isEqualTo(listOf<Long>(2, 3, 4, 5))
+    }
+
+    @Test
+    fun `Parse single race ignoring spaces`() {
+        val input = """
+            Time:      7  15   30
+            Distance:  9  40  200
+        """.trimIndent().lines()
+
+        val race = Race.from(input)
+
+        assertThat(race).isEqualTo(Race(
+            time = 71530,
+            recordDistance = 940200
+        ))
     }
 }
