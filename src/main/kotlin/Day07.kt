@@ -1,12 +1,14 @@
 fun main() {
     fun part1(input: List<String>): Int {
-        val hands = input.map { Hand.from(it) }.sorted()
+        val hands = input.map { Hand.from(it) }.sortedWith(Hand.SIMPLE_RANK_COMPARATOR)
 
         return hands.withIndex().sumOf { (it.index + 1) * it.value.bid }
     }
 
     fun part2(input: List<String>): Int {
-        return input.size
+        val hands = input.map { Hand.from(it) }.sortedWith(Hand.JOKER_RANK_COMPARATOR)
+
+        return hands.withIndex().sumOf { (it.index + 1) * it.value.bid }
     }
 
     // test if implementation meets criteria from the description, like:
@@ -21,10 +23,24 @@ fun main() {
 data class Hand(
     val cards: String,
     val bid: Int
-) : Comparable<Hand> {
+) {
     fun type(): Type {
-        val cardCounts = cards.groupingBy { it }.eachCount().values.sortedDescending()
+        val cardCounts = countCards(cards)
         return Type.from(cardCounts)
+    }
+
+    fun typeWithJokers(): Type {
+        val nonJokers = cards.filterNot { it == 'J' }
+        val numJokers = cards.length - nonJokers.length
+        if (numJokers == 0 || numJokers == 5) {
+            return type()
+        }
+        val cardCounts = countCards(nonJokers)
+        return Type.from(listOf(cardCounts.first() + numJokers, *cardCounts.drop(1).toTypedArray()))
+    }
+
+    private fun countCards(nonJokers: String): List<Int> {
+        return nonJokers.groupingBy { it }.eachCount().values.sortedDescending()
     }
 
     enum class Type(val rank: Int, val cardCounts: List<Int>) {
@@ -45,25 +61,28 @@ data class Hand(
     }
 
     companion object {
+
+        private const val CARD_STRENGTH = "23456789TJQKA"
+        private const val JOKER_CARD_STRENGTH = "J23456789TQKA"
+
+        val SIMPLE_RANK_COMPARATOR = compareBy<Hand> { it.type().rank }
+            .thenBy { CARD_STRENGTH.indexOf(it.cards[0]) }
+            .thenBy { CARD_STRENGTH.indexOf(it.cards[1]) }
+            .thenBy { CARD_STRENGTH.indexOf(it.cards[2]) }
+            .thenBy { CARD_STRENGTH.indexOf(it.cards[3]) }
+            .thenBy { CARD_STRENGTH.indexOf(it.cards[4]) }
+
+        val JOKER_RANK_COMPARATOR = compareBy<Hand> { it.typeWithJokers().rank }
+            .thenBy { JOKER_CARD_STRENGTH.indexOf(it.cards[0]) }
+            .thenBy { JOKER_CARD_STRENGTH.indexOf(it.cards[1]) }
+            .thenBy { JOKER_CARD_STRENGTH.indexOf(it.cards[2]) }
+            .thenBy { JOKER_CARD_STRENGTH.indexOf(it.cards[3]) }
+            .thenBy { JOKER_CARD_STRENGTH.indexOf(it.cards[4]) }
+
         fun from(input: String): Hand {
             val (cards, bid) = input.trim().split("\\s+".toRegex())
             return Hand(cards, bid.toInt())
         }
-
-        const val CARD_STRENGTH = "23456789TJQKA"
     }
 
-    override fun compareTo(other: Hand): Int {
-        val rankComparator = compareBy<Hand> { it.type().rank }
-            .thenBy { strength(it.cards[0]) }
-            .thenBy { strength(it.cards[1]) }
-            .thenBy { strength(it.cards[2]) }
-            .thenBy { strength(it.cards[3])}
-            .thenBy { strength(it.cards[4]) }
-        return rankComparator.compare(this, other)
-    }
-
-    private fun strength(card: Char): Int {
-        return CARD_STRENGTH.indexOf(card)
-    }
 }

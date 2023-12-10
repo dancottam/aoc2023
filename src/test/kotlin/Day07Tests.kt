@@ -62,7 +62,7 @@ class Day07Tests {
             QQQJA 483
         """.trimIndent().lines()
 
-        val hands = input.map { Hand.from(it) }.sorted()
+        val hands = input.map { Hand.from(it) }.sortedWith(Hand.SIMPLE_RANK_COMPARATOR)
 
         assertThat(hands).isEqualTo(listOf(
             Hand("32T3K", 765),
@@ -83,10 +83,54 @@ class Day07Tests {
             QQQJA 483
         """.trimIndent().lines()
 
-        val hands = input.map { Hand.from(it) }.sorted()
+        val hands = input.map { Hand.from(it) }.sortedWith(Hand.SIMPLE_RANK_COMPARATOR)
 
         val winnings = hands.withIndex().sumOf { (it.index + 1) * it.value.bid }
 
         assertThat(winnings).isEqualTo(6440)
+    }
+
+    @Test
+    fun `Type with jokers`() {
+        val hand = Hand("QQQJA", 483)
+        assertThat(hand.typeWithJokers()).isEqualTo(FOUR_OF_A_KIND)
+    }
+
+    @Test
+    fun `Rank hands with jokers`() {
+        val input = """
+            32T3K 765
+            T55J5 684
+            KK677 28
+            KTJJT 220
+            QQQJA 483
+        """.trimIndent().lines()
+
+        val hands = input.map { Hand.from(it) }.sortedWith(Hand.JOKER_RANK_COMPARATOR)
+
+        assertThat(hands).isEqualTo(listOf(
+            Hand("32T3K", 765),
+            Hand("KK677", 28),
+            Hand("T55J5", 684),
+            Hand("QQQJA", 483),
+            Hand("KTJJT", 220),
+        ))
+    }
+
+    @Test
+    fun `Calculate winnings wiht jokers`() {
+        val input = """
+            32T3K 765
+            T55J5 684
+            KK677 28
+            KTJJT 220
+            QQQJA 483
+        """.trimIndent().lines()
+
+        val hands = input.map { Hand.from(it) }.sortedWith(Hand.JOKER_RANK_COMPARATOR)
+
+        val winnings = hands.withIndex().sumOf { (it.index + 1) * it.value.bid }
+
+        assertThat(winnings).isEqualTo(5905)
     }
 }
