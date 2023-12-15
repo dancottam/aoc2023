@@ -2,6 +2,7 @@ import Maze.Coordinate.Companion.EAST
 import Maze.Coordinate.Companion.NORTH
 import Maze.Coordinate.Companion.SOUTH
 import Maze.Coordinate.Companion.WEST
+import kotlin.math.absoluteValue
 
 fun main() {
     fun part1(input: List<String>): Int {
@@ -10,7 +11,8 @@ fun main() {
     }
 
     fun part2(input: List<String>): Int {
-        return input.size
+        val maze = Maze.from(input)
+        return maze.countEnclosedTiles()
     }
 
     // test if implementation meets criteria from the description, like:
@@ -61,6 +63,37 @@ class Maze(
         return followPipe().size / 2
     }
 
+    fun countEnclosedTiles(): Int {
+
+        // Find area (A) enclosed by pipe using shoelace formula (https://en.wikipedia.org/wiki/Shoelace_formula)
+        val area = calculatePipeArea()
+        // Number of points on boundary (b)
+        val countBoundaryPoints = followPipe().size
+        /*
+        Then substitute A and b into Pick's theorem (https://en.wikipedia.org/wiki/Pick%27s_theorem) to find the number of interior points (i):
+            A = i + b/2 - 1
+        Solve for i:
+            A + 1 = i + b/2
+            A + 1 - b/2 = i
+        */
+
+        val interiorPointCount = area + 1 - (countBoundaryPoints / 2)
+
+        return interiorPointCount
+    }
+
+    fun calculatePipeArea(): Int {
+        val pipe = followPipe().toList()
+
+        var total = 0
+        for (i in pipe.indices) {
+            val next = if (i + 1 <= pipe.lastIndex) i + 1 else 0
+            total += (pipe[i].x * pipe[next].y) - (pipe[i].y * pipe[next].x)
+        }
+
+        return (total / 2).absoluteValue
+    }
+
     data class Coordinate(
         val x: Int,
         val y: Int,
@@ -68,7 +101,7 @@ class Maze(
         fun compassPoints(): Set<Coordinate> {
             return setOf(
                 this + NORTH,
-                this+ SOUTH,
+                this + SOUTH,
                 this + WEST,
                 this + EAST
             )

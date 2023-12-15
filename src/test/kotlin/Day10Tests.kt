@@ -99,4 +99,34 @@ class Day10Tests {
 
         assertThat(maze.countStepsToFurthestPoint()).isEqualTo(4)
     }
+
+    @Test
+    fun `Find area enclosed by pipe`() {
+        val input = """
+            .....
+            .S-7.
+            .|.|.
+            .L-J.
+            .....
+        """.trimIndent().lines()
+
+        val maze = Maze.from(input)
+
+        assertThat(maze.calculatePipeArea()).isEqualTo(4)
+    }
+
+    @Test
+    fun `Count tiles enclosed by pipe`() {
+        val input = """
+            .....
+            .S-7.
+            .|.|.
+            .L-J.
+            .....
+        """.trimIndent().lines()
+
+        val maze = Maze.from(input)
+
+        assertThat(maze.countEnclosedTiles()).isEqualTo(1)
+    }
 }
