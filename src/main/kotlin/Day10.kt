@@ -36,6 +36,11 @@ class Maze(
     }
 
     fun followPipe(): Set<Coordinate> {
+
+        // Code "borrowed" from Todd Ginsberg's solution (https://todd.ginsberg.com/post/advent-of-code/2023/day10/),
+        // because it's more "Kotlin" and so much nicer than my first attempt which was very "Java".  Particularly love
+        // the use of constants for NORTH, SOUTH, EAST, WEST that allow simple coordinate arithmetic to determine direction
+
         val path = mutableSetOf(start())
 
         var current = start().compassPoints().filter { isValid(it) }.first {
